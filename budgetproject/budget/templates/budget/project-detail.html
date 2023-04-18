@@ -1,0 +1,257 @@
+{% extends 'budget/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+
+  <section class="section section-stats">
+    <div class="row">
+
+      <div class="col s12 m12 l4">
+        <div class="card-panel">
+          <h6 class="bold">Баланс</h6>
+          <h1 class="bold">{{ project.budget_balanse }}₽</h1>
+        </div>
+      </div>
+
+      <div class="col s12 m6 l4">
+        <div class="card-panel">
+          <h6 class="bold">Остаток</h6>
+          {% if project.budget_left > 0 %}
+            <h1 class="bold green-text">{{ project.budget_left }}₽</h1>
+          {% elif project.budget_left == 0 %}
+            <h1 class="bold orange-text">{{ project.budget_left }}₽</h1>
+          {% else %}
+            <h1 class="bold red-text">{{ project.budget_left }}₽</h1>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col s12 m6 l4">
+        <div class="card-panel">
+          <h6 class="bold">Потрачено</h6>
+          <h1 class="bold">{{ project.total_transactions }}₽</h1>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section section-expenses">
+    <div class="row">
+      <button  data-target='expenseModal' class="btn waves-effect right modal-trigger" href="#expenseModal">
+        <i class="material-icons white-text left">add_circle</i>
+        Добавить расход
+      </button>
+
+    </div>
+
+    <ul class="z-depth-1">
+
+      {% for expense in expense_list %}
+      <li>
+        <div class="card-panel z-depth-0 expense">
+          <div class="row">
+
+            <div class="col l6">
+              <span class="title">{{ expense.title }}</span>
+            </div>
+
+            <div class="col l3">
+              <span class="title">{{ expense.amount }}₽</span>
+            </div>
+
+            <div class="col 1">
+              <span class="title bold">{{ expense.category.name }}</span>
+            </div>
+
+            <div class="col 1">
+              <span class="title bold">{{ expense.date }}</span>
+            </div>
+
+            <a class="close-icon" onclick="deleteExpense(this)" data-id="{{ expense.id }}">
+              <i class="material-icons red-text right">close</i>
+            </a>
+
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+
+    </ul>
+  </section>
+
+
+  <section class="section section-incomes">
+    <div class="row">
+      <button data-target='incomeModal' class="btn waves-effect right modal-trigger" href="#incomeModal">
+        <i class="material-icons white-text left">add_circle</i>
+        Добавить доход
+      </button>
+    </div>
+
+    <ul class="z-depth-1">
+
+      {% for income in income_list %}
+      <li>
+        <div class="card-panel z-depth-0 income">
+          <div class="row">
+
+            <div class="col l6">
+              <span class="title">{{ income.title }}</span>
+            </div>
+
+            <div class="col l3">
+              <span class="title">{{ income.amount }}₽</span>
+            </div>
+
+            <div class="col 1">
+              <span class="title bold">{{ income.date }}</span>
+            </div>
+
+
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+
+    </ul>
+  </section>
+
+  <div class="row center">
+    <div class="col 5">
+      <canvas id="income_diag"></canvas>
+    </div>
+
+    <div class="col l5">
+      <canvas id="expense_diag"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<div id="expenseModal" class="modal">
+  <div class="modal-content">
+    <h4>Новый расход</h4>
+
+    <form method="POST">
+      {% csrf_token %}
+      <label for="title">Название</label>
+      <input name="title" id="title">
+
+      <label for="amount">Бюджет</label>
+      <input name="amount" id="amount">
+
+      <select name="category">
+        {% for category in category_list %}
+          <option>{{ category.name }}</option>
+        {% endfor %}
+      </select>
+
+
+
+      <button type="submit" class="btn">Добавить</button>
+    </form>
+
+  </div>
+</div>
+
+<div id="incomeModal" class="modal">
+  <div class="modal-content">
+    <h4>Новый доход</h4>
+
+    <form method="POST">
+      {% csrf_token %}
+      <label for="income_title">Название</label>
+      <input name="income_title" id="income_title">
+
+      <label for="income_amount">Бюджет</label>
+      <input name="income_amount" id="income_amount">
+
+      <button type="submit" class="btn">Добавить</button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+var elems = document.querySelectorAll('.modal');
+var instances = M.Modal.init(elems);
+
+var elem = document.querySelector('select');
+var instance = M.FormSelect.init(elem);
+
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+var elems = document.querySelectorAll('.modal');
+var instances = M.Modal.init(elems);
+
+var elem = document.querySelector('select');
+var instance = M.FormSelect.init(elem);
+
+});
+
+
+function deleteExpense(e){
+
+  let id = e.dataset.id
+  e.closest('li').remove()
+
+  fetch('', {
+    method: 'DELETE',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({
+      'id': id
+    }),
+    credentials: 'same-origin',
+  })
+}
+
+function fetchCategoryArray(){
+  var categories = []
+
+  document.querySelectorAll('.category').forEach(function(e){
+    name = e.querySelector('.name').innerHTML
+    if (name == '') return
+
+    categories.push(name)
+  })
+
+  return categories
+
+}
+
+let colors1=['#42a5f5', '#bdbdbd', '#4db6ac', '#9575cd', '#3f51b5', '#c51162']
+const expense_ctx = document.getElementById('expense_diag');
+const income_ctx = document.getElementById('income_diag');
+
+  new Chart(expense_ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        label: 'Диаграмма расходов',
+        data: [12, 19, 3, 5, 2, 3],
+        backgroundColor: colors1
+      }]
+    },
+    options: {
+        plugins: {
+            title: {
+                display: true,
+                text: 'Диаграмма расходов'
+            }
+        }
+    }
+  });
+
+
+
+
+</script>
+
+{% endblock %}

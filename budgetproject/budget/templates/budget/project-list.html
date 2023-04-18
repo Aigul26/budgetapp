@@ -1,0 +1,31 @@
+{% extends 'budget/base.html' %}
+{% block content %}
+
+<div class="container">
+
+  <h1>Мои проекты</h1>
+  <hr>
+
+  <div class="row">
+    {% for project in project_list %}
+    <div class="col s12 md6 xl3">
+      <div class="card-panel">
+        <h5>{{ project.name }}</h5>
+        <a href="{% url 'detail' project.slug %}" class="btn">Войти</a>
+      </div>
+    </div>
+
+    {% endfor %}
+
+        <div class="noproject-wrapper right">
+      <a href="{% url 'add' %}" class="btn-large grey">
+        <i class="material-icons black-text left">add_circle</i>
+        <span class="bold">Добавить проект</span>
+      </a>
+    </div>
+  </div>
+
+
+</div>
+
+{% endblock %}
